@@ -20,18 +20,15 @@
     --accent: #2D5A27;
 
     /* Category palette — bg / left-border / text */
-    --gym:     #DDEAF8, #5A9ED0, #1A4070;
-    --yoga:    #E8E3F8, #8878C8, #32278A;
-    --peloton: #D8F2E6, #42A878, #185040;
-    --tennis:  #E2F0D0, #72B040, #285010;
-    --walk:    #ECEAE4, #A09888, #484038;
-    --kids:    #FCF0D4, #E0A020, #604808;
-    --dinner:  #F8EFE4, #C09858, #503818;
-    --vball:   #FAE6DC, #D06840, #680F0F;
-    --ninja:   #FAE0DC, #D05858, #681010;
-    --cheer:   #FDF4D0, #D8B820, #583808;
-    --work:    #EEE8F8, #A888C8, #341860;
-    --rest:    #E8F2E8, #88B888, #285028;
+    --alex-exercise:  #DDEAF8, #5A9ED0, #1A4070;
+    --tricia-exercise:#E8E3F8, #8878C8, #32278A;
+    --tennis:         #E2F0D0, #72B040, #285010;
+    --walk:           #ECEAE4, #A09888, #484038;
+    --major:          #D8F0EE, #48A8A0, #184848;
+    --josie:          #FAE0EC, #D05888, #681038;
+    --meals:          #F8EFE4, #C09858, #503818;
+    --alex-work:      #E8EAEC, #6B7A8D, #2A3040;
+    --tricia-work:    #EDEAE6, #8A8278, #3A3530;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,14 +107,12 @@
   /* ── GRID ── */
   .main { padding: 1.5rem 2rem 3rem; overflow-x: auto; }
 
-  .grid-wrap { min-width: 740px; }
+  .grid-wrap { min-width: 820px; }
 
-  .day-headers, .grid-body {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-  }
-  .day-headers { margin-bottom: 8px; }
+  /* Day header row */
+  .day-headers-row { display: flex; margin-bottom: 8px; }
+  .band-label-spacer { width: 72px; flex-shrink: 0; }
+  .day-headers { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
 
   .day-header {
     font-size: 11px;
@@ -129,7 +124,34 @@
     border-bottom: 2px solid var(--border2);
   }
 
-  .day-col { display: flex; flex-direction: column; gap: 5px; }
+  /* Band rows */
+  .band-row {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--border);
+    padding: 10px 0;
+  }
+  .band-row.empty { display: none; }
+
+  .band-label {
+    width: 72px;
+    flex-shrink: 0;
+    padding-top: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+  }
+
+  .band-days {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .day-cell { display: flex; flex-direction: column; gap: 5px; }
 
   /* ── BLOCK ── */
   .block {
@@ -169,18 +191,15 @@
   }
 
   /* ── CATEGORY COLORS ── */
-  .cat-gym     { background: #DDEAF8; border-left-color: #5A9ED0; color: #1A4070; }
-  .cat-yoga    { background: #E8E3F8; border-left-color: #8878C8; color: #32278A; }
-  .cat-peloton { background: #D8F2E6; border-left-color: #42A878; color: #185040; }
-  .cat-tennis  { background: #E2F0D0; border-left-color: #72B040; color: #285010; }
-  .cat-walk    { background: #ECEAE4; border-left-color: #A09888; color: #484038; }
-  .cat-kids    { background: #FCF0D4; border-left-color: #E0A020; color: #604808; }
-  .cat-dinner  { background: #F8EFE4; border-left-color: #C09858; color: #503818; }
-  .cat-vball   { background: #FAE6DC; border-left-color: #D06840; color: #680F0F; }
-  .cat-ninja   { background: #FAE0DC; border-left-color: #D05858; color: #681010; }
-  .cat-cheer   { background: #FDF4D0; border-left-color: #D8B820; color: #583808; }
-  .cat-work    { background: #EEE8F8; border-left-color: #A888C8; color: #341860; }
-  .cat-rest    { background: #E8F2E8; border-left-color: #88B888; color: #285028; }
+  .cat-alex-exercise   { background: #DDEAF8; border-left-color: #5A9ED0; color: #1A4070; }
+  .cat-tricia-exercise { background: #E8E3F8; border-left-color: #8878C8; color: #32278A; }
+  .cat-tennis          { background: #E2F0D0; border-left-color: #72B040; color: #285010; }
+  .cat-walk            { background: #ECEAE4; border-left-color: #A09888; color: #484038; }
+  .cat-major           { background: #D8F0EE; border-left-color: #48A8A0; color: #184848; }
+  .cat-josie           { background: #FAE0EC; border-left-color: #D05888; color: #681038; }
+  .cat-meals           { background: #F8EFE4; border-left-color: #C09858; color: #503818; }
+  .cat-alex-work       { background: #E8EAEC; border-left-color: #6B7A8D; color: #2A3040; }
+  .cat-tricia-work     { background: #EDEAE6; border-left-color: #8A8278; color: #3A3530; }
 
   /* ── STATS FOOTER ── */
   .stats-bar {
@@ -228,10 +247,7 @@
 
 <div class="main">
   <div id="error-msg" class="msg hidden"></div>
-  <div class="grid-wrap" id="grid-wrap">
-    <div class="day-headers" id="day-headers"></div>
-    <div class="grid-body"   id="grid-body"></div>
-  </div>
+  <div class="grid-wrap" id="grid-wrap"></div>
 </div>
 
 <div class="stats-bar" id="stats-bar"></div>
@@ -241,28 +257,32 @@
 // Path to the YAML file (relative to this HTML file)
 const YAML_FILE = 'schedule.yaml';
 
+// Time-of-day bands
+const BANDS = [
+  { key: 'morning', label: 'Morning' },
+  { key: 'midday',  label: 'Midday'  },
+  { key: 'evening', label: 'Evening' },
+];
+
 // Which categories belong to each view filter
 const VIEW_CATS = {
   all:      null, // null = show everything
-  exercise: ['gym','yoga','peloton','tennis','walk','vball'],
-  kids:     ['kids','ninja','cheer'],
-  food:     ['dinner'],
+  exercise: ['alex-exercise','tricia-exercise','tennis','walk'],
+  kids:     ['major','josie'],
+  food:     ['meals'],
 };
 
 // Human-readable category labels for the legend
 const CAT_LABELS = {
-  gym:     'Gym / strength',
-  yoga:    'Yoga / gym (Tricia)',
-  peloton: 'Peloton',
-  tennis:  'Tennis',
-  walk:    'Walk',
-  kids:    'Kid logistics',
-  dinner:  'Dinner',
-  vball:   'Volleyball',
-  ninja:   'Ninja / D&D',
-  cheer:   'Cheer',
-  work:    'Work',
-  rest:    'Rest / flex',
+  'alex-exercise':   'Alex — exercise',
+  'tricia-exercise': 'Tricia — exercise',
+  'tennis':          'Tennis',
+  'walk':            'Walk',
+  'major':           'Major',
+  'josie':           'Josie',
+  'meals':           'Meals',
+  'alex-work':       'Alex — work',
+  'tricia-work':     'Tricia — work',
 };
 
 // ── STATE ───────────────────────────────────────────────────────────────────
@@ -326,42 +346,72 @@ function renderLegend() {
 
 function renderGrid() {
   const days = scheduleData.days || [];
-  const headersEl = document.getElementById('day-headers');
-  const bodyEl    = document.getElementById('grid-body');
+  const wrap = document.getElementById('grid-wrap');
+  wrap.innerHTML = '';
 
-  headersEl.innerHTML = '';
-  bodyEl.innerHTML    = '';
-
+  // Day headers row (with spacer for the band-label column)
+  const headersRow = document.createElement('div');
+  headersRow.className = 'day-headers-row';
+  const spacer = document.createElement('div');
+  spacer.className = 'band-label-spacer';
+  headersRow.appendChild(spacer);
+  const headersGrid = document.createElement('div');
+  headersGrid.className = 'day-headers';
   days.forEach(day => {
-    // header
     const hdr = document.createElement('div');
     hdr.className = 'day-header';
     hdr.textContent = day.name;
-    headersEl.appendChild(hdr);
+    headersGrid.appendChild(hdr);
+  });
+  headersRow.appendChild(headersGrid);
+  wrap.appendChild(headersRow);
 
-    // column
-    const col = document.createElement('div');
-    col.className = 'day-col';
+  // One band-row per band
+  BANDS.forEach(band => {
+    const bandRow = document.createElement('div');
+    bandRow.className = 'band-row';
 
-    (day.blocks || []).forEach(b => {
-      const cat = (b.category || 'rest').toLowerCase();
-      const visible = !VIEW_CATS[currentView] || VIEW_CATS[currentView].includes(cat);
-      if (!visible) return;
+    const labelEl = document.createElement('div');
+    labelEl.className = 'band-label';
+    labelEl.textContent = band.label;
+    bandRow.appendChild(labelEl);
 
-      const block = document.createElement('div');
-      block.className = `block cat-${cat}${b.flexible ? ' flexible' : ''}`;
-      if (b.note) block.dataset.note = b.note;
+    const bandDays = document.createElement('div');
+    bandDays.className = 'band-days';
 
-      block.innerHTML =
-        (b.time  ? `<div class="block-time">${b.time}</div>` : '') +
-        `<div class="block-label">${b.label}</div>` +
-        (b.who && b.who !== 'all' && b.who !== 'both'
-          ? `<div class="block-sub">${b.who}</div>` : '');
+    let totalVisible = 0;
 
-      col.appendChild(block);
+    days.forEach(day => {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+
+      (day.blocks || [])
+        .filter(b => (b.band || 'morning') === band.key)
+        .forEach(b => {
+          const cat = (b.category || '').toLowerCase();
+          const visible = !VIEW_CATS[currentView] || VIEW_CATS[currentView].includes(cat);
+          if (!visible) return;
+          totalVisible++;
+
+          const block = document.createElement('div');
+          block.className = `block cat-${cat}${b.flexible ? ' flexible' : ''}`;
+          if (b.note) block.dataset.note = b.note;
+
+          block.innerHTML =
+            (b.time ? `<div class="block-time">${b.time}</div>` : '') +
+            `<div class="block-label">${b.label}</div>` +
+            (b.who && b.who !== 'all'
+              ? `<div class="block-sub">${b.who}</div>` : '');
+
+          cell.appendChild(block);
+        });
+
+      bandDays.appendChild(cell);
     });
 
-    bodyEl.appendChild(col);
+    bandRow.appendChild(bandDays);
+    if (totalVisible === 0) bandRow.classList.add('empty');
+    wrap.appendChild(bandRow);
   });
 }
 
@@ -371,16 +421,13 @@ function renderStats() {
 
   days.forEach(day => {
     (day.blocks || []).forEach(b => {
-      const cat = b.category;
-      const who = (b.who || '').toLowerCase();
-      if (cat === 'gym' && (who === 'alex' || who === 'both')) alexEx++;
-      if (cat === 'peloton') alexEx++;
+      const cat = (b.category || '').toLowerCase();
+      if (cat === 'alex-exercise')   alexEx++;
+      if (cat === 'tricia-exercise') triciaEx++;
       if (cat === 'tennis') { alexEx++; triciaEx++; }
-      if (cat === 'yoga')   triciaEx++;
-      if (cat === 'vball')  triciaEx++;
       if (cat === 'walk')   walks++;
-      if (cat === 'dinner' && b.label.toLowerCase().includes('cook')) cookNights++;
-      if (cat === 'dinner' && b.label.toLowerCase().includes('eat out')) eatOut++;
+      if (cat === 'meals' && b.label.toLowerCase().includes('cook')) cookNights++;
+      if (cat === 'meals' && b.label.toLowerCase().includes('eat out')) eatOut++;
     });
   });
 
