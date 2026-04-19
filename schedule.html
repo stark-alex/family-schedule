@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- js-yaml from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #EEEAE3;
+    --border: rgba(0,0,0,0.09);
+    --border2: rgba(0,0,0,0.16);
+    --text: #1A1915;
+    --text2: #6B6860;
+    --text3: #A8A59E;
+    --accent: #2D5A27;
+
+    /* Category palette — bg / left-border / text */
+    --gym:     #DDEAF8, #5A9ED0, #1A4070;
+    --yoga:    #E8E3F8, #8878C8, #32278A;
+    --peloton: #D8F2E6, #42A878, #185040;
+    --tennis:  #E2F0D0, #72B040, #285010;
+    --walk:    #ECEAE4, #A09888, #484038;
+    --kids:    #FCF0D4, #E0A020, #604808;
+    --dinner:  #F8EFE4, #C09858, #503818;
+    --vball:   #FAE6DC, #D06840, #680F0F;
+    --ninja:   #FAE0DC, #D05858, #681010;
+    --cheer:   #FDF4D0, #D8B820, #583808;
+    --work:    #EEE8F8, #A888C8, #341860;
+    --rest:    #E8F2E8, #88B888, #285028;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border2);
+    padding: 1.5rem 2rem 1rem;
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  header p {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 5px;
+  }
+
+  .view-tabs {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .tab {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 5px 13px;
+    border-radius: 5px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 0.75rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── GRID ── */
+  .main { padding: 1.5rem 2rem 3rem; overflow-x: auto; }
+
+  .grid-wrap { min-width: 740px; }
+
+  .day-headers, .grid-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .day-headers { margin-bottom: 8px; }
+
+  .day-header {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text3);
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border2);
+  }
+
+  .day-col { display: flex; flex-direction: column; gap: 5px; }
+
+  /* ── BLOCK ── */
+  .block {
+    border-radius: 6px;
+    padding: 6px 8px 6px 10px;
+    border-left: 3px solid transparent;
+    cursor: default;
+    position: relative;
+    transition: box-shadow 0.12s, transform 0.12s;
+  }
+  .block:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.10); transform: translateY(-1px); }
+  .block.flexible { opacity: 0.68; }
+  .block.flexible .block-label::after { content: ' ~'; opacity: 0.5; }
+
+  .block-time  { font-size: 10px; font-weight: 300; opacity: 0.65; margin-bottom: 1px; }
+  .block-label { font-size: 11px; font-weight: 500; line-height: 1.35; }
+  .block-sub   { font-size: 10px; opacity: 0.65; margin-top: 1px; }
+
+  /* tooltip */
+  .block[data-note]:hover::after {
+    content: attr(data-note);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 300;
+    line-height: 1.5;
+    padding: 7px 10px;
+    border-radius: 6px;
+    width: 220px;
+    z-index: 100;
+    pointer-events: none;
+    white-space: normal;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  }
+
+  /* ── CATEGORY COLORS ── */
+  .cat-gym     { background: #DDEAF8; border-left-color: #5A9ED0; color: #1A4070; }
+  .cat-yoga    { background: #E8E3F8; border-left-color: #8878C8; color: #32278A; }
+  .cat-peloton { background: #D8F2E6; border-left-color: #42A878; color: #185040; }
+  .cat-tennis  { background: #E2F0D0; border-left-color: #72B040; color: #285010; }
+  .cat-walk    { background: #ECEAE4; border-left-color: #A09888; color: #484038; }
+  .cat-kids    { background: #FCF0D4; border-left-color: #E0A020; color: #604808; }
+  .cat-dinner  { background: #F8EFE4; border-left-color: #C09858; color: #503818; }
+  .cat-vball   { background: #FAE6DC; border-left-color: #D06840; color: #680F0F; }
+  .cat-ninja   { background: #FAE0DC; border-left-color: #D05858; color: #681010; }
+  .cat-cheer   { background: #FDF4D0; border-left-color: #D8B820; color: #583808; }
+  .cat-work    { background: #EEE8F8; border-left-color: #A888C8; color: #341860; }
+  .cat-rest    { background: #E8F2E8; border-left-color: #88B888; color: #285028; }
+
+  /* ── STATS FOOTER ── */
+  .stats-bar {
+    display: flex;
+    gap: 6px;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--bg);
+    border-radius: 7px;
+    padding: 8px 14px;
+    min-width: 120px;
+  }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
+  .stat-value { font-size: 20px; font-weight: 500; color: var(--text); margin: 2px 0 0; }
+  .stat-sub   { font-size: 10px; color: var(--text3); }
+
+  /* ── ERROR / LOADING ── */
+  .msg { padding: 3rem 2rem; color: var(--text2); font-size: 13px; }
+  .msg code { background: var(--surface2); padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+
+  /* ── HIDDEN ── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Family Schedule</h1>
+    <p>Edit <code>schedule.yaml</code> and refresh to update &nbsp;·&nbsp; Hover blocks for notes &nbsp;·&nbsp; <span style="opacity:.6">~ = flexible</span></p>
+  </div>
+  <div class="view-tabs">
+    <button class="tab active" data-view="all">All</button>
+    <button class="tab" data-view="exercise">Exercise</button>
+    <button class="tab" data-view="kids">Kids</button>
+    <button class="tab" data-view="food">Food</button>
+  </div>
+</header>
+
+<div class="legend" id="legend"></div>
+
+<div class="main">
+  <div id="error-msg" class="msg hidden"></div>
+  <div class="grid-wrap" id="grid-wrap">
+    <div class="day-headers" id="day-headers"></div>
+    <div class="grid-body"   id="grid-body"></div>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+// Path to the YAML file (relative to this HTML file)
+const YAML_FILE = 'schedule.yaml';
+
+// Which categories belong to each view filter
+const VIEW_CATS = {
+  all:      null, // null = show everything
+  exercise: ['gym','yoga','peloton','tennis','walk','vball'],
+  kids:     ['kids','ninja','cheer'],
+  food:     ['dinner'],
+};
+
+// Human-readable category labels for the legend
+const CAT_LABELS = {
+  gym:     'Gym / strength',
+  yoga:    'Yoga / gym (Tricia)',
+  peloton: 'Peloton',
+  tennis:  'Tennis',
+  walk:    'Walk',
+  kids:    'Kid logistics',
+  dinner:  'Dinner',
+  vball:   'Volleyball',
+  ninja:   'Ninja / D&D',
+  cheer:   'Cheer',
+  work:    'Work',
+  rest:    'Rest / flex',
+};
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let scheduleData = null;
+let currentView  = 'all';
+
+// ── LOAD YAML ───────────────────────────────────────────────────────────────
+async function loadYaml() {
+  try {
+    const res = await fetch(YAML_FILE + '?_=' + Date.now()); // bust cache
+    if (!res.ok) throw new Error(`HTTP ${res.status} — make sure schedule.yaml is in the same folder as this HTML file.`);
+    const text = await res.text();
+    scheduleData = jsyaml.load(text);
+    render();
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').innerHTML =
+    `<strong>Could not load schedule.yaml</strong><br>${msg}<br><br>
+     Make sure you're opening this file through a local server, not directly as a <code>file://</code> URL.<br>
+     Quick option: <code>python3 -m http.server</code> in this folder, then open <code>http://localhost:8000</code>.`;
+  document.getElementById('error-msg').classList.remove('hidden');
+  document.getElementById('grid-wrap').classList.add('hidden');
+}
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  if (!scheduleData?.days) return;
+  renderLegend();
+  renderGrid();
+  renderStats();
+}
+
+function renderLegend() {
+  const seen = new Set();
+  (scheduleData.days || []).forEach(d =>
+    (d.blocks || []).forEach(b => seen.add(b.category))
+  );
+
+  const el = document.getElementById('legend');
+  el.innerHTML = '';
+  [...seen].forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    // grab the background color from the CSS class via a temp element
+    const tmp = document.createElement('div');
+    tmp.className = `block cat-${cat}`;
+    tmp.style.cssText = 'position:absolute;visibility:hidden;';
+    document.body.appendChild(tmp);
+    const bg = getComputedStyle(tmp).backgroundColor;
+    const border = getComputedStyle(tmp).borderLeftColor;
+    document.body.removeChild(tmp);
+
+    item.innerHTML = `<div class="legend-dot" style="background:${bg};outline:1.5px solid ${border};"></div>${CAT_LABELS[cat] || cat}`;
+    el.appendChild(item);
+  });
+}
+
+function renderGrid() {
+  const days = scheduleData.days || [];
+  const headersEl = document.getElementById('day-headers');
+  const bodyEl    = document.getElementById('grid-body');
+
+  headersEl.innerHTML = '';
+  bodyEl.innerHTML    = '';
+
+  days.forEach(day => {
+    // header
+    const hdr = document.createElement('div');
+    hdr.className = 'day-header';
+    hdr.textContent = day.name;
+    headersEl.appendChild(hdr);
+
+    // column
+    const col = document.createElement('div');
+    col.className = 'day-col';
+
+    (day.blocks || []).forEach(b => {
+      const cat = (b.category || 'rest').toLowerCase();
+      const visible = !VIEW_CATS[currentView] || VIEW_CATS[currentView].includes(cat);
+      if (!visible) return;
+
+      const block = document.createElement('div');
+      block.className = `block cat-${cat}${b.flexible ? ' flexible' : ''}`;
+      if (b.note) block.dataset.note = b.note;
+
+      block.innerHTML =
+        (b.time  ? `<div class="block-time">${b.time}</div>` : '') +
+        `<div class="block-label">${b.label}</div>` +
+        (b.who && b.who !== 'all' && b.who !== 'both'
+          ? `<div class="block-sub">${b.who}</div>` : '');
+
+      col.appendChild(block);
+    });
+
+    bodyEl.appendChild(col);
+  });
+}
+
+function renderStats() {
+  const days = scheduleData.days || [];
+  let alexEx = 0, triciaEx = 0, walks = 0, cookNights = 0, eatOut = 0;
+
+  days.forEach(day => {
+    (day.blocks || []).forEach(b => {
+      const cat = b.category;
+      const who = (b.who || '').toLowerCase();
+      if (cat === 'gym' && (who === 'alex' || who === 'both')) alexEx++;
+      if (cat === 'peloton') alexEx++;
+      if (cat === 'tennis') { alexEx++; triciaEx++; }
+      if (cat === 'yoga')   triciaEx++;
+      if (cat === 'vball')  triciaEx++;
+      if (cat === 'walk')   walks++;
+      if (cat === 'dinner' && b.label.toLowerCase().includes('cook')) cookNights++;
+      if (cat === 'dinner' && b.label.toLowerCase().includes('eat out')) eatOut++;
+    });
+  });
+
+  const bar = document.getElementById('stats-bar');
+  bar.innerHTML = [
+    { label: 'Alex workouts',   value: alexEx   + '/wk', sub: 'target 4–5' },
+    { label: 'Tricia workouts', value: triciaEx + '/wk', sub: 'yoga + gym + vball + tennis' },
+    { label: 'Walks',           value: walks    + '/wk', sub: 'daily goal' },
+    { label: 'Cook nights',     value: cookNights,       sub: 'eat-in target' },
+    { label: 'Eat out nights',  value: eatOut,           sub: 'planned' },
+  ].map(s => `
+    <div class="stat">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-sub">${s.sub}</div>
+    </div>`).join('');
+}
+
+// ── TABS ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentView = tab.dataset.view;
+    renderGrid();
+  });
+});
+
+// ── BOOT ────────────────────────────────────────────────────────────────────
+loadYaml();
+</script>
+</body>
+</html>

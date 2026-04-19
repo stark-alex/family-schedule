@@ -1,0 +1,294 @@
+# Family Schedule Configuration
+# Edit this file to update the schedule, then refresh schedule.html in your browser.
+#
+# Categories: gym, yoga, peloton, tennis, walk, kids, dinner, vball, ninja, cheer, work, rest
+# Flexible: true = shows a ~ marker, slightly muted (optional plans)
+# Who: alex, tricia, both, all, kids (used in notes only, not rendered differently)
+
+days:
+  - name: Sunday
+    blocks:
+      - time: "8:00–9:00"
+        label: Peloton spin
+        category: peloton
+        who: alex
+        flexible: false
+        note: Sunday morning spin. Cardio only — no logistics pressure, no drop-off needed.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: both
+        flexible: true
+        note: 15–20 min loop after lunch. Easy anchor before afternoon tennis.
+      - time: "3:00–5:00"
+        label: Family tennis
+        category: tennis
+        who: all
+        flexible: false
+        note: Full exercise session for both Alex and Tricia. Protect this.
+      - time: "5:30"
+        label: Cook dinner (together)
+        category: dinner
+        who: both
+        flexible: false
+        note: Both adults home all day — ideal cook-together night.
+      - time: "7:00"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: false
+        note: Post-dinner dog walk. Easiest night to lock this in.
+
+  - name: Monday
+    blocks:
+      - time: "6:50–8:45"
+        label: Tricia — gym
+        category: yoga
+        who: tricia
+        flexible: false
+        note: Alex does drop-off at 6:50, freeing Tricia simultaneously. Full 2hr window — drive, 1hr workout, back and showered before 9am work start. This is her second gym day (yoga counts as gym).
+      - time: "6:50"
+        label: Alex drops kids off
+        category: kids
+        who: alex
+        flexible: false
+        note: Back home ~7:40. Tricia leaves for gym at same time.
+      - time: "8:30–4:30"
+        label: Work (Alex)
+        category: work
+        who: alex
+        flexible: false
+        note: Monday is a planned rest day from structured exercise — Peloton Sunday, gym Wednesday. Intentional recovery gap.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: alex
+        flexible: true
+        note: Step away from desk for 15–20 min. Easy self-enforcement on a calm work day.
+      - time: "~2:45"
+        label: Math club pickup ⚠
+        category: kids
+        who: both
+        flexible: true
+        note: Math Club Mondays only. Both kids need pickup at roughly the same time — requires 2 adults. Tricia leaves office ~2:30, or Taylor if available.
+      - time: "5:15"
+        label: Cook dinner (Tricia)
+        category: dinner
+        who: tricia
+        flexible: false
+        note: Tricia cooks Monday. Both adults home by 5, kids home by 5.
+      - time: "7:00"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: false
+        note: Post-dinner family walk. Monday evenings are calm — nothing competing.
+
+  - name: Tuesday
+    blocks:
+      - time: "6:50–8:45"
+        label: Alex — gym (strength #1)
+        category: gym
+        who: alex
+        flexible: false
+        note: Tricia does drop-off at 6:50, freeing Alex simultaneously. Full 2hr window. Strength day 1 of 2 — next strength day is Thursday, two days recovery between them.
+      - time: "6:50"
+        label: Tricia drops kids off
+        category: kids
+        who: tricia
+        flexible: false
+        note: Tricia covers Tuesday drop-off so Alex can go to gym.
+      - time: "8:30–4:30"
+        label: Work (Alex)
+        category: work
+        who: alex
+        flexible: false
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: alex
+        flexible: true
+        note: Light movement after a morning strength session is ideal recovery.
+      - time: "3:45"
+        label: Leave for cheer pickup
+        category: cheer
+        who: one
+        flexible: false
+        note: Leave home 3:45 to get in line. Pickup Josie at 4:15. Cheer runs until 6:30. Alternate who covers — Taylor can sub if available.
+      - time: "4:15–6:30"
+        label: Josie — cheer class
+        category: cheer
+        who: josie
+        flexible: false
+        note: For next 2 weeks. Once cheer ends, aim to land gymnastics/tumbling on a weeknight (Wed or Fri preferred to keep Sat free).
+      - time: "5:30–7:30"
+        label: Major — ninja / D&D
+        category: ninja
+        who: major
+        flexible: false
+        note: Ninja class most Tuesdays. D&D Tuesdays = pickup from school instead of bus. Both kids have activities tonight.
+      - time: "7:30"
+        label: Eat out
+        category: dinner
+        who: all
+        flexible: false
+        note: Default eat-out night — both kids have evening activities, no adult free to cook.
+
+  - name: Wednesday
+    blocks:
+      - time: "6:50"
+        label: Tricia drops kids off
+        category: kids
+        who: tricia
+        flexible: false
+        note: Tricia's consistent Wednesday drop-off.
+      - time: "6:50–8:45"
+        label: Alex — gym (strength #2)
+        category: gym
+        who: alex
+        flexible: false
+        note: Alex leaves at 6:50 simultaneously with Tricia's drop-off. Full 2hr window before 8:30 work start. Strength days Tue + Thu — Wed is in between, works as the second slot given logistics.
+      - time: "8:30–4:30"
+        label: Work (Alex)
+        category: work
+        who: alex
+        flexible: false
+        note: Tricia heads to office ~9.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: alex
+        flexible: true
+        note: Alex is solo most of the day — easy to self-enforce.
+      - time: "After work"
+        label: Tricia — volleyball
+        category: vball
+        who: tricia
+        flexible: false
+        note: Full 2hr session, counts as her cardio for the week. She's out until ~7–7:15.
+      - time: "5:00"
+        label: Alex — solo parent + cooks
+        category: dinner
+        who: alex
+        flexible: false
+        note: Alex covers kids, homework, dinner. Keep it simple — one-adult cook night. Batch cook Tuesday evening or use easy meals.
+      - time: "7:15"
+        label: Tricia home
+        category: rest
+        who: tricia
+        flexible: false
+        note: Tricia back from volleyball. Wind-down.
+      - time: "7:45"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: true
+        note: Later than usual — Tricia gets home ~7:15. Still doable as a quick post-volleyball dog walk.
+
+  - name: Thursday
+    blocks:
+      - time: "6:50"
+        label: Alex drops kids off
+        category: kids
+        who: alex
+        flexible: false
+        note: Alex on drop-off duty. Back ~7:40.
+      - time: "6:50–8:45"
+        label: Tricia — yoga (gym)
+        category: yoga
+        who: tricia
+        flexible: false
+        note: Alex does drop-off, freeing Tricia for yoga at the gym. Her Monday was gym, so this completes her 2 gym mornings for the week.
+      - time: "8:30–4:30"
+        label: Work (Alex)
+        category: work
+        who: alex
+        flexible: false
+        note: Thursday is recovery from Wednesday gym. No strength training today.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: alex
+        flexible: true
+      - time: "4:30–5:15"
+        label: Peloton spin
+        category: peloton
+        who: alex
+        flexible: true
+        note: Alex wraps work at 4:30, 30–35 min spin before the evening. Cardio only — fine after Wednesday strength. Friday is backup if this gets bumped.
+      - time: "5:30"
+        label: Cook dinner (Tricia)
+        category: dinner
+        who: tricia
+        flexible: false
+        note: Tricia cooks Thursday. Alex cooked Wednesday — alternating keeps it fair.
+      - time: "7:00"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: false
+
+  - name: Friday
+    blocks:
+      - time: "6:50"
+        label: Alex drops kids off
+        category: kids
+        who: alex
+        flexible: false
+        note: Back ~7:40.
+      - time: "8:30–4:30"
+        label: Work (Alex)
+        category: work
+        who: alex
+        flexible: false
+        note: Friday is a natural rest/light day. Wed gym + Thu Peloton means no structured exercise needed.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: alex
+        flexible: true
+      - time: "4:30"
+        label: Peloton (backup)
+        category: peloton
+        who: alex
+        flexible: true
+        note: Use only if Thursday's spin got skipped. Skip if the week's 4–5 session target is already met.
+      - time: "5:30"
+        label: Cook dinner (together)
+        category: dinner
+        who: both
+        flexible: true
+        note: Both adults home. Good cook-together night, or flex to eat out if it's been a long week.
+      - time: "7:00"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: false
+        note: End-of-week wind-down. Great for the dog and decompressing before the weekend.
+
+  - name: Saturday
+    blocks:
+      - time: "Morning"
+        label: Flex / rest
+        category: rest
+        who: all
+        flexible: true
+        note: Unstructured morning. Bonus points for a longer walk, hike, or bike ride.
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        who: all
+        flexible: true
+      - time: "6:00"
+        label: Cook dinner (together)
+        category: dinner
+        who: both
+        flexible: false
+        note: Ideal cook-together night — more time, less rush, try something new.
+      - time: "7:30"
+        label: Evening walk
+        category: walk
+        who: all
+        flexible: false
+        note: Weekend evenings easiest to protect this habit.
+

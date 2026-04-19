@@ -1,0 +1,12 @@
+# Terraform state — contains secrets, never commit
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/lambda/auth.zip
+
+# tfvars may contain secrets depending on what you put there
+terraform/terraform.tfvars
+
+# macOS
+.DS_Store
