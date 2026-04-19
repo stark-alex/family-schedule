@@ -2,6 +2,19 @@ data "aws_route53_zone" "main" {
   zone_id = var.hosted_zone_id
 }
 
+# Apex A record — required by Cognito to validate the parent domain before creating a custom hosted-UI domain
+resource "aws_route53_record" "apex_a" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.main.domain_name
+    zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # schedule.yourdomain.com → CloudFront
 resource "aws_route53_record" "schedule_a" {
   zone_id = data.aws_route53_zone.main.zone_id

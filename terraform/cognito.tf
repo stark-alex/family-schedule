@@ -73,9 +73,12 @@ resource "aws_cognito_user_pool_client" "main" {
   depends_on = [aws_cognito_identity_provider.google]
 }
 
-# Custom domain for the hosted UI — requires the wildcard cert
+# Custom domain for the hosted UI — requires the wildcard cert.
+# depends_on apex_a: Cognito does a live DNS lookup for the parent domain at create time.
 resource "aws_cognito_user_pool_domain" "main" {
   domain          = "${var.auth_subdomain}.${var.domain_name}"
   certificate_arn = aws_acm_certificate_validation.main.certificate_arn
   user_pool_id    = aws_cognito_user_pool.main.id
+
+  depends_on = [aws_route53_record.apex_a]
 }
