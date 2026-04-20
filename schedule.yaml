@@ -58,6 +58,13 @@ days:
         band: midday
         who: tricia
         flexible: false
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        band: midday
+        who: alex
+        flexible: true
+        note: Step away from desk for 15–20 min. Easy self-enforcement on a calm work day.
       - time: "~4:45"
         label: Math club pickup ⚠
         category: major
@@ -107,6 +114,13 @@ days:
         band: midday
         who: tricia
         flexible: false
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        band: midday
+        who: alex
+        flexible: true
+        note: Light movement after a morning strength session is good recovery.
       - time: "3:45"
         label: Leave for cheer pickup
         category: josie
@@ -172,6 +186,13 @@ days:
         who: tricia
         flexible: false
         note: Heads to office after drop-off. Out for volleyball after work (~5:30).
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        band: midday
+        who: alex
+        flexible: true
+        note: Alex is solo most of the day — easy to self-enforce.
       - time: "After work"
         label: Tricia — volleyball
         category: tricia-exercise
@@ -222,6 +243,13 @@ days:
         band: midday
         who: tricia
         flexible: false
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        band: midday
+        who: alex
+        flexible: true
+        note: Mid-week reset walk.
       - time: "4:30–5:15"
         label: Peloton spin
         category: alex-exercise
@@ -264,6 +292,13 @@ days:
         band: midday
         who: tricia
         flexible: false
+      - time: "12:30"
+        label: Lunch walk
+        category: walk
+        band: midday
+        who: alex
+        flexible: true
+        note: End of week mid-day walk.
       - time: "4:30"
         label: Peloton (backup)
         category: alex-exercise
@@ -271,6 +306,13 @@ days:
         who: alex
         flexible: true
         note: Use only if Thursday's spin got skipped. Skip if the week's 4–5 session target is already met.
+      - time: "5:30"
+        label: Cook dinner
+        category: meals
+        band: evening
+        who: both
+        flexible: true
+        note: Both adults home — good cook-together night. Flex to eat out if it's been a long week.
       - time: "6:30"
         label: Evening walk
         category: walk
