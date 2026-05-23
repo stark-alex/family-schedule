@@ -76,11 +76,98 @@ resource "aws_iam_role_policy" "github_actions" {
         Resource = "arn:aws:iam::*:role/family-schedule-api*"
       },
       {
-        Sid      = "CloudFront"
-        Effect   = "Allow"
-        Action   = ["cloudfront:CreateInvalidation", "cloudfront:GetDistribution",
-                    "cloudfront:GetDistributionConfig"]
+        Sid    = "CloudFront"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateDistribution", "cloudfront:UpdateDistribution",
+          "cloudfront:GetDistribution", "cloudfront:GetDistributionConfig",
+          "cloudfront:DeleteDistribution", "cloudfront:CreateInvalidation",
+          "cloudfront:CreateOriginAccessControl", "cloudfront:GetOriginAccessControl",
+          "cloudfront:UpdateOriginAccessControl", "cloudfront:DeleteOriginAccessControl",
+          "cloudfront:ListDistributions"
+        ]
         Resource = "*"
+      },
+      {
+        Sid    = "S3BucketManagement"
+        Effect = "Allow"
+        Action = [
+          "s3:CreateBucket", "s3:DeleteBucket", "s3:GetBucketPolicy",
+          "s3:PutBucketPolicy", "s3:GetBucketVersioning", "s3:PutBucketVersioning",
+          "s3:GetBucketPublicAccessBlock", "s3:PutBucketPublicAccessBlock",
+          "s3:GetAccelerateConfiguration", "s3:GetBucketCORS",
+          "s3:GetBucketLogging", "s3:GetBucketObjectLockConfiguration",
+          "s3:GetBucketRequestPayment", "s3:GetBucketTagging",
+          "s3:GetBucketWebsite", "s3:GetEncryptionConfiguration",
+          "s3:GetLifecycleConfiguration", "s3:GetReplicationConfiguration"
+        ]
+        Resource = ["arn:aws:s3:::family-schedule-*"]
+      },
+      {
+        Sid    = "Cognito"
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:CreateUserPool", "cognito-idp:UpdateUserPool",
+          "cognito-idp:DeleteUserPool", "cognito-idp:DescribeUserPool",
+          "cognito-idp:CreateUserPoolClient", "cognito-idp:UpdateUserPoolClient",
+          "cognito-idp:DeleteUserPoolClient", "cognito-idp:DescribeUserPoolClient",
+          "cognito-idp:CreateUserPoolDomain", "cognito-idp:DeleteUserPoolDomain",
+          "cognito-idp:DescribeUserPoolDomain", "cognito-idp:UpdateUserPoolDomain",
+          "cognito-idp:CreateIdentityProvider", "cognito-idp:UpdateIdentityProvider",
+          "cognito-idp:DeleteIdentityProvider", "cognito-idp:DescribeIdentityProvider",
+          "cognito-idp:GetUserPoolMfaConfig"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ACM"
+        Effect = "Allow"
+        Action = [
+          "acm:RequestCertificate", "acm:DescribeCertificate",
+          "acm:DeleteCertificate", "acm:ListCertificates",
+          "acm:AddTagsToCertificate"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "Route53"
+        Effect = "Allow"
+        Action = [
+          "route53:GetHostedZone", "route53:ChangeResourceRecordSets",
+          "route53:ListResourceRecordSets", "route53:GetChange"
+        ]
+        Resource = [
+          "arn:aws:route53:::hostedzone/*",
+          "arn:aws:route53:::change/*"
+        ]
+      },
+      {
+        Sid    = "LambdaEdge"
+        Effect = "Allow"
+        Action = [
+          "lambda:CreateFunction", "lambda:UpdateFunctionCode",
+          "lambda:UpdateFunctionConfiguration", "lambda:GetFunction",
+          "lambda:DeleteFunction", "lambda:PublishVersion",
+          "lambda:GetFunctionCodeSigningConfig", "lambda:ListVersionsByFunction",
+          "lambda:EnableReplication"
+        ]
+        Resource = "arn:aws:lambda:us-east-1:*:function:family-schedule-auth*"
+      },
+      {
+        Sid    = "IAMShared"
+        Effect = "Allow"
+        Action = [
+          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
+          "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListAttachedRolePolicies",
+          "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
+          "iam:ListRolePolicies", "iam:CreateOpenIDConnectProvider",
+          "iam:GetOpenIDConnectProvider", "iam:DeleteOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint"
+        ]
+        Resource = [
+          "arn:aws:iam::*:role/family-schedule-*",
+          "arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com"
+        ]
       },
       {
         Sid      = "CallerIdentity"
