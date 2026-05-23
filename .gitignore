@@ -4,6 +4,8 @@ terraform/terraform.tfstate.backup
 terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform/lambda/auth.zip
+terraform/lambda/api.zip
+api/bootstrap
 
 # tfvars may contain secrets depending on what you put there
 terraform/terraform.tfvars
