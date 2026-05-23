@@ -1,5 +1,10 @@
+locals {
+  # Prod keeps the original name for state migration compatibility; PR envs get a suffix
+  function_name = var.env_name == "prod" ? "${var.project_name}-api" : "${var.project_name}-api-${var.env_name}"
+}
+
 resource "aws_iam_role" "api_lambda" {
-  name = "${var.project_name}-api"
+  name = local.function_name
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,15 +30,15 @@ resource "aws_iam_role_policy" "api_lambda_s3" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["s3:GetObject", "s3:PutObject"]
-      Resource = "${aws_s3_bucket.content.arn}/schedule.yaml"
+      Resource = "${var.s3_bucket_arn}/schedule.yaml"
     }]
   })
 }
 
 resource "aws_lambda_function" "api" {
-  filename         = "${path.module}/lambda/api.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda/api.zip")
-  function_name    = "${var.project_name}-api"
+  filename         = "${path.module}/../../terraform/lambda/api.zip"
+  source_code_hash = filebase64sha256("${path.module}/../../terraform/lambda/api.zip")
+  function_name    = local.function_name
   role             = aws_iam_role.api_lambda.arn
   handler          = "bootstrap"
   runtime          = "provided.al2023"
@@ -41,28 +46,33 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      S3_BUCKET = aws_s3_bucket.content.bucket
+      S3_BUCKET = var.s3_bucket
     }
   }
 }
 
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "AWS_IAM"
+  authorization_type = var.authorization_type
+
+  dynamic "cors" {
+    for_each = var.authorization_type == "NONE" ? [1] : []
+    content {
+      allow_origins = ["*"]
+      allow_methods = ["GET", "PUT"]
+      allow_headers = ["content-type"]
+    }
+  }
 }
 
-# Allows CloudFront (and only this distribution) to invoke the Function URL via OAC signing.
-# CloudFront wiring lives in cloudfront.tf — this permission is a prerequisite for PR 2.
+# Only grant CloudFront invoke permission for prod (AWS_IAM) deployments
 resource "aws_lambda_permission" "api_from_cloudfront" {
+  count = var.cloudfront_distribution_arn != "" ? 1 : 0
+
   statement_id           = "AllowCloudFrontInvoke"
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.api.function_name
   principal              = "cloudfront.amazonaws.com"
-  source_arn             = aws_cloudfront_distribution.main.arn
+  source_arn             = var.cloudfront_distribution_arn
   function_url_auth_type = "AWS_IAM"
-}
-
-output "api_lambda_function_url" {
-  value       = aws_lambda_function_url.api.function_url
-  description = "Direct Lambda Function URL (IAM-signed only — not publicly accessible)"
 }

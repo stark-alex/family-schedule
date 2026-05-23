@@ -12,10 +12,10 @@ locals {
 # Render the template with Cognito values baked in (Lambda@Edge has no env vars)
 data "archive_file" "auth_lambda" {
   type        = "zip"
-  output_path = "${path.module}/lambda/auth.zip"
+  output_path = "${path.module}/../lambda/auth.zip"
 
   source {
-    content  = templatefile("${path.module}/lambda/auth.js.tpl", local.auth_lambda_config)
+    content  = templatefile("${path.module}/../lambda/auth.js.tpl", local.auth_lambda_config)
     filename = "auth.js"
   }
 }

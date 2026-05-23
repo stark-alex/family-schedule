@@ -6,12 +6,16 @@ output "s3_bucket_name" {
   value = aws_s3_bucket.content.bucket
 }
 
+output "s3_bucket_arn" {
+  value = aws_s3_bucket.content.arn
+}
+
 output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.main.id
 }
 
-output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.main.domain_name
+output "cloudfront_distribution_arn" {
+  value = aws_cloudfront_distribution.main.arn
 }
 
 output "cognito_user_pool_id" {
@@ -20,4 +24,8 @@ output "cognito_user_pool_id" {
 
 output "cognito_client_id" {
   value = aws_cognito_user_pool_client.main.id
+}
+
+output "github_actions_role_arn" {
+  value = aws_iam_role.github_actions.arn
 }

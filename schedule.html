@@ -254,9 +254,8 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const YAML_URL = window.location.hostname === 'localhost'
-  ? 'schedule.yaml'
-  : '/api/schedule';
+const YAML_URL = window.__PREVIEW_API__
+  || (window.location.hostname === 'localhost' ? 'schedule.yaml' : '/api/schedule');
 
 // Time-of-day bands
 const BANDS = [

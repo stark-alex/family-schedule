@@ -1,0 +1,87 @@
+name: Deploy – Production
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_STATE_BUCKET: stark-tf-state
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+          cache: true
+
+      - name: Run tests
+        working-directory: api
+        run: go test ./...
+
+      - name: Build Lambda zip
+        run: ./build.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Read shared outputs
+        id: shared
+        working-directory: terraform/shared
+        run: |
+          terraform init -input=false
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "s3_bucket_arn=$(terraform output -raw s3_bucket_arn)" >> $GITHUB_OUTPUT
+          echo "cf_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "cf_distribution_arn=$(terraform output -raw cloudfront_distribution_arn)" >> $GITHUB_OUTPUT
+
+      - name: Terraform init – api (prod state)
+        working-directory: terraform/api
+        run: |
+          terraform init -input=false \
+            -backend-config="key=family-schedule/api-prod.tfstate"
+
+      - name: Terraform apply – api (prod)
+        working-directory: terraform/api
+        run: |
+          terraform apply -auto-approve -input=false \
+            -var="env_name=prod" \
+            -var="authorization_type=AWS_IAM" \
+            -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
+            -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
+            -var="cloudfront_distribution_arn=${{ steps.shared.outputs.cf_distribution_arn }}"
+
+      - name: Deploy static assets
+        run: |
+          aws s3 sync . "s3://${{ steps.shared.outputs.s3_bucket }}" \
+            --exclude "terraform/*" \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "*.sh" \
+            --exclude ".gitignore" \
+            --exclude "CLAUDE.md" \
+            --exclude "README.md" \
+            --exclude "api/*" \
+            --exclude "docs/*" \
+            --cache-control "no-cache, no-store"
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.shared.outputs.cf_distribution_id }}" \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text

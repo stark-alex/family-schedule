@@ -1,0 +1,104 @@
+name: CI – Shared Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/shared/**'
+      - 'terraform/lambda/auth.js.tpl'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: terraform/shared
+        run: terraform init -input=false
+
+      - name: Terraform plan
+        id: plan
+        working-directory: terraform/shared
+        run: |
+          terraform plan -no-color -out=tfplan > /tmp/plan.txt 2>&1
+          TF_EXIT=$?
+          if [ -f tfplan ]; then
+            terraform show -no-color tfplan > /tmp/plan.txt
+          fi
+          exit $TF_EXIT
+        continue-on-error: true
+
+      - name: Post plan to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const raw = fs.readFileSync('/tmp/plan.txt', 'utf8');
+            const outcome = '${{ steps.plan.outcome }}';
+
+            const summary = raw.match(/^(Plan:.*|No changes\..*)$/m)?.[0]
+              ?? (outcome === 'failure' ? 'Plan failed — see details' : 'See full plan below');
+
+            const diff = raw.length > 55000 ? raw.slice(0, 55000) + '\n\n…(truncated)' : raw;
+
+            const icon = outcome === 'failure' ? '❌' : summary.startsWith('No changes') ? '✅' : '⚠️';
+            const note = outcome === 'failure'
+              ? '_Fix the errors above before merging._'
+              : summary.startsWith('No changes')
+              ? '_No infrastructure changes will be made on merge._'
+              : '_Merging this PR will apply these changes to production via `deploy-shared.yml`._';
+
+            const body = [
+              `### ${icon} terraform/shared plan`,
+              `**${summary}**`,
+              note,
+              '',
+              '<details><summary>Full diff</summary>',
+              '',
+              '```hcl',
+              diff,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.payload.pull_request.number
+            });
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.includes('terraform/shared plan')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: existing.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.payload.pull_request.number,
+                body
+              });
+            }
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1

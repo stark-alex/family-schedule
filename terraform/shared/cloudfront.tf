@@ -1,6 +1,19 @@
+data "terraform_remote_state" "api_prod" {
+  backend = "s3"
+  config = {
+    bucket = "stark-tf-state"
+    key    = "family-schedule/api-prod.tfstate"
+    region = "us-east-1"
+  }
+}
+
 locals {
   s3_origin_id  = "s3-${var.project_name}"
   api_origin_id = "api-${var.project_name}"
+  api_domain = try(
+    trimsuffix(trimprefix(data.terraform_remote_state.api_prod.outputs.api_function_url, "https://"), "/"),
+    "placeholder.lambda-url.us-east-1.on.aws"
+  )
 }
 
 resource "aws_cloudfront_origin_access_control" "api" {
@@ -25,7 +38,7 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   origin {
-    domain_name              = trimsuffix(trimprefix(aws_lambda_function_url.api.function_url, "https://"), "/")
+    domain_name              = local.api_domain
     origin_id                = local.api_origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.api.id
 
