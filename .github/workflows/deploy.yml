@@ -24,7 +24,8 @@ jobs:
           cache: true
 
       - name: Run tests
-        run: go test ./api/...
+        working-directory: api
+        run: go test ./...
 
       - name: Build Lambda zip
         run: ./build.sh
