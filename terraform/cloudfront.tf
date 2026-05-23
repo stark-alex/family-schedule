@@ -42,7 +42,7 @@ resource "aws_cloudfront_distribution" "main" {
     target_origin_id       = local.api_origin_id
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
-    allowed_methods        = ["GET", "HEAD", "PUT"]
+    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
 
     forwarded_values {
