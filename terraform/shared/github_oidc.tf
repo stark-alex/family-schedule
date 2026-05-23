@@ -47,7 +47,8 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Sid    = "ContentBucket"
         Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket",
+                  "s3:GetBucketAcl"]
         Resource = ["arn:aws:s3:::family-schedule-*", "arn:aws:s3:::family-schedule-*/*"]
       },
       {
@@ -125,7 +126,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Action = [
           "acm:RequestCertificate", "acm:DescribeCertificate",
           "acm:DeleteCertificate", "acm:ListCertificates",
-          "acm:AddTagsToCertificate"
+          "acm:AddTagsToCertificate", "acm:ListTagsForCertificate"
         ]
         Resource = "*"
       },
@@ -135,7 +136,7 @@ resource "aws_iam_role_policy" "github_actions" {
         Action = [
           "route53:GetHostedZone", "route53:ListHostedZones",
           "route53:ChangeResourceRecordSets", "route53:ListResourceRecordSets",
-          "route53:GetChange"
+          "route53:GetChange", "route53:ListTagsForResource"
         ]
         Resource = [
           "arn:aws:route53:::hostedzone/*",
