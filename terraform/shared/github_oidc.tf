@@ -85,7 +85,7 @@ resource "aws_iam_role_policy" "github_actions" {
           "cloudfront:DeleteDistribution", "cloudfront:CreateInvalidation",
           "cloudfront:CreateOriginAccessControl", "cloudfront:GetOriginAccessControl",
           "cloudfront:UpdateOriginAccessControl", "cloudfront:DeleteOriginAccessControl",
-          "cloudfront:ListDistributions"
+          "cloudfront:ListDistributions", "cloudfront:ListTagsForResource"
         ]
         Resource = "*"
       },
