@@ -28,6 +28,13 @@ resource "aws_cloudfront_distribution" "main" {
     domain_name              = trimsuffix(trimprefix(aws_lambda_function_url.api.function_url, "https://"), "/")
     origin_id                = local.api_origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.api.id
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   ordered_cache_behavior {
