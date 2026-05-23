@@ -39,8 +39,12 @@ jobs:
         id: plan
         working-directory: terraform/shared
         run: |
-          terraform plan -no-color -out=tfplan 2>/dev/null
-          terraform show -no-color tfplan > /tmp/plan.txt
+          terraform plan -no-color -out=tfplan > /tmp/plan.txt 2>&1
+          TF_EXIT=$?
+          if [ -f tfplan ]; then
+            terraform show -no-color tfplan > /tmp/plan.txt
+          fi
+          exit $TF_EXIT
         continue-on-error: true
 
       - name: Post plan to PR
