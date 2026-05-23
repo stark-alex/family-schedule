@@ -5,8 +5,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BUCKET=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw s3_bucket_name)
-DIST_ID=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw cloudfront_distribution_id)
+BUCKET=$(cd "$SCRIPT_DIR/terraform/shared" && terraform output -raw s3_bucket_name)
+DIST_ID=$(cd "$SCRIPT_DIR/terraform/shared" && terraform output -raw cloudfront_distribution_id)
 
 echo "Syncing to s3://$BUCKET ..."
 aws s3 sync "$SCRIPT_DIR" "s3://$BUCKET" \
@@ -24,4 +24,4 @@ aws cloudfront create-invalidation \
   --query 'Invalidation.Id' \
   --output text
 
-echo "Done. Changes live at $(cd "$SCRIPT_DIR/terraform" && terraform output -raw schedule_url) in ~30s."
+echo "Done. Changes live at $(cd "$SCRIPT_DIR/terraform/shared" && terraform output -raw schedule_url) in ~30s."

@@ -1,0 +1,62 @@
+name: PR Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  AWS_REGION: us-east-1
+  TF_STATE_BUCKET: stark-tf-state
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Read shared outputs
+        id: shared
+        working-directory: terraform/shared
+        run: |
+          terraform init -input=false
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "s3_bucket_arn=$(terraform output -raw s3_bucket_arn)" >> $GITHUB_OUTPUT
+
+      - name: Terraform init – api (PR state)
+        working-directory: terraform/api
+        run: |
+          terraform init -input=false \
+            -backend-config="key=family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
+
+      - name: Terraform destroy – api (PR)
+        working-directory: terraform/api
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var="env_name=pr-${{ github.event.pull_request.number }}" \
+            -var="authorization_type=NONE" \
+            -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
+            -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
+            -var="cloudfront_distribution_arn="
+
+      - name: Delete PR state from S3
+        run: |
+          aws s3 rm \
+            "s3://${{ env.TF_STATE_BUCKET }}/family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
+
+      - name: Delete preview HTML from content bucket
+        run: |
+          aws s3 rm \
+            "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ github.event.pull_request.number }}/" \
+            --recursive

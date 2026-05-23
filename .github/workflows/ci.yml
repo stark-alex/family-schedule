@@ -1,0 +1,104 @@
+name: CI – Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+  TF_STATE_BUCKET: stark-tf-state
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+          cache: true
+
+      - name: Run tests
+        run: go test ./api/...
+
+      - name: Build Lambda zip
+        run: ./build.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Read shared outputs
+        id: shared
+        working-directory: terraform/shared
+        run: |
+          terraform init -input=false
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "s3_bucket_arn=$(terraform output -raw s3_bucket_arn)" >> $GITHUB_OUTPUT
+
+      - name: Terraform init – api (PR state)
+        working-directory: terraform/api
+        run: |
+          terraform init -input=false \
+            -backend-config="key=family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
+
+      - name: Terraform apply – api (PR)
+        id: tf_apply
+        working-directory: terraform/api
+        run: |
+          terraform apply -auto-approve -input=false \
+            -var="env_name=pr-${{ github.event.pull_request.number }}" \
+            -var="authorization_type=NONE" \
+            -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
+            -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
+            -var="cloudfront_distribution_arn="
+          echo "api_url=$(terraform output -raw api_function_url)" >> $GITHUB_OUTPUT
+
+      - name: Inject preview API URL into schedule.html
+        run: |
+          API_URL="${{ steps.tf_apply.outputs.api_url }}"
+          API_URL="${API_URL%/}"
+          sed "s|window.__PREVIEW_API__|'${API_URL}'|g" \
+            schedule.html > /tmp/schedule-preview.html
+
+      - name: Upload preview HTML to S3
+        run: |
+          aws s3 cp /tmp/schedule-preview.html \
+            "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ github.event.pull_request.number }}/schedule.html" \
+            --cache-control "no-cache, no-store"
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request.number;
+            const url = `https://schedule.atmj-stark.com/preview/pr-${pr}/schedule.html`;
+            const body = `Preview deployed: ${url}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo, issue_number: pr
+            });
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.startsWith('Preview deployed:')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo, comment_id: existing.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo, issue_number: pr, body
+              });
+            }
