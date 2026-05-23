@@ -57,10 +57,16 @@ jobs:
             const diff = raw.length > 55000 ? raw.slice(0, 55000) + '\n\n…(truncated)' : raw;
 
             const icon = outcome === 'failure' ? '❌' : summary.startsWith('No changes') ? '✅' : '⚠️';
+            const note = outcome === 'failure'
+              ? '_Fix the errors above before merging._'
+              : summary.startsWith('No changes')
+              ? '_No infrastructure changes will be made on merge._'
+              : '_Merging this PR will apply these changes to production via `deploy-shared.yml`._';
 
             const body = [
               `### ${icon} terraform/shared plan`,
               `**${summary}**`,
+              note,
               '',
               '<details><summary>Full diff</summary>',
               '',
