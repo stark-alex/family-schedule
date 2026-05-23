@@ -133,13 +133,21 @@ resource "aws_iam_role_policy" "github_actions" {
         Sid    = "Route53"
         Effect = "Allow"
         Action = [
-          "route53:GetHostedZone", "route53:ChangeResourceRecordSets",
-          "route53:ListResourceRecordSets", "route53:GetChange"
+          "route53:GetHostedZone", "route53:ListHostedZones",
+          "route53:ChangeResourceRecordSets", "route53:ListResourceRecordSets",
+          "route53:GetChange"
         ]
         Resource = [
           "arn:aws:route53:::hostedzone/*",
-          "arn:aws:route53:::change/*"
+          "arn:aws:route53:::change/*",
+          "*"
         ]
+      },
+      {
+        Sid    = "SSM"
+        Effect = "Allow"
+        Action = ["ssm:GetParameter"]
+        Resource = "arn:aws:ssm:us-east-1:*:parameter/family-schedule/*"
       },
       {
         Sid    = "LambdaEdge"
