@@ -254,8 +254,9 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-// Path to the YAML file (relative to this HTML file)
-const YAML_FILE = 'schedule.yaml';
+const YAML_URL = window.location.hostname === 'localhost'
+  ? 'schedule.yaml'
+  : '/api/schedule';
 
 // Time-of-day bands
 const BANDS = [
@@ -292,8 +293,8 @@ let currentView  = 'all';
 // ── LOAD YAML ───────────────────────────────────────────────────────────────
 async function loadYaml() {
   try {
-    const res = await fetch(YAML_FILE + '?_=' + Date.now()); // bust cache
-    if (!res.ok) throw new Error(`HTTP ${res.status} — make sure schedule.yaml is in the same folder as this HTML file.`);
+    const res = await fetch(YAML_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     scheduleData = jsyaml.load(text);
     render();
@@ -304,9 +305,8 @@ async function loadYaml() {
 
 function showError(msg) {
   document.getElementById('error-msg').innerHTML =
-    `<strong>Could not load schedule.yaml</strong><br>${msg}<br><br>
-     Make sure you're opening this file through a local server, not directly as a <code>file://</code> URL.<br>
-     Quick option: <code>python3 -m http.server</code> in this folder, then open <code>http://localhost:8000</code>.`;
+    `<strong>Could not load schedule</strong><br>${msg}<br><br>
+     Locally: run <code>python3 -m http.server</code> and open <code>http://localhost:8000</code>.`;
   document.getElementById('error-msg').classList.remove('hidden');
   document.getElementById('grid-wrap').classList.add('hidden');
 }

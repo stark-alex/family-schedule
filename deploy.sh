@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # deploy.sh — push updated schedule.html / schedule.yaml to S3 and bust the CDN cache
+# API changes (api/) require: ./build.sh && terraform apply (then run this script)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

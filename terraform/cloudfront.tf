@@ -1,5 +1,13 @@
 locals {
-  s3_origin_id = "s3-${var.project_name}"
+  s3_origin_id  = "s3-${var.project_name}"
+  api_origin_id = "api-${var.project_name}"
+}
+
+resource "aws_cloudfront_origin_access_control" "api" {
+  name                              = "${var.project_name}-api"
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "main" {
@@ -14,6 +22,37 @@ resource "aws_cloudfront_distribution" "main" {
     domain_name              = aws_s3_bucket.content.bucket_regional_domain_name
     origin_id                = local.s3_origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.main.id
+  }
+
+  origin {
+    domain_name              = trimsuffix(trimprefix(aws_lambda_function_url.api.function_url, "https://"), "/")
+    origin_id                = local.api_origin_id
+    origin_access_control_id = aws_cloudfront_origin_access_control.api.id
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/api/schedule"
+    target_origin_id       = local.api_origin_id
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+    allowed_methods        = ["GET", "HEAD", "PUT"]
+    cached_methods         = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = aws_lambda_function.auth.qualified_arn
+      include_body = false
+    }
   }
 
   default_cache_behavior {
