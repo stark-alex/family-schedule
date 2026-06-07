@@ -13,6 +13,12 @@ variable "s3_bucket_arn" {
   type        = string
 }
 
+variable "s3_key" {
+  description = "S3 object key for the schedule file"
+  type        = string
+  default     = "schedule.yaml"
+}
+
 variable "project_name" {
   description = "Prefix for AWS resource names"
   type        = string

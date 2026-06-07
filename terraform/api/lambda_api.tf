@@ -4,7 +4,6 @@ locals {
 }
 
 data "aws_ssm_parameter" "origin_verify_secret" {
-  count           = var.env_name == "prod" ? 1 : 0
   name            = "/family-schedule/origin-verify-secret"
   with_decryption = true
 }
@@ -53,7 +52,8 @@ resource "aws_lambda_function" "api" {
   environment {
     variables = {
       S3_BUCKET            = var.s3_bucket
-      ORIGIN_VERIFY_SECRET = var.env_name == "prod" ? data.aws_ssm_parameter.origin_verify_secret[0].value : ""
+      ORIGIN_VERIFY_SECRET = data.aws_ssm_parameter.origin_verify_secret.value
+      S3_KEY               = var.s3_key
     }
   }
 }
