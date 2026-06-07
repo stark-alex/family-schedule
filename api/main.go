@@ -23,11 +23,15 @@ type s3Client interface {
 }
 
 type handler struct {
-	s3     s3Client
-	bucket string
+	s3                 s3Client
+	bucket             string
+	originVerifySecret string
 }
 
 func (h *handler) handle(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
+	if h.originVerifySecret != "" && req.Headers["x-origin-verify"] != h.originVerifySecret {
+		return events.LambdaFunctionURLResponse{StatusCode: http.StatusForbidden}, nil
+	}
 	switch req.RequestContext.HTTP.Method {
 	case http.MethodGet:
 		return h.getSchedule(ctx)
@@ -97,8 +101,9 @@ func main() {
 	}
 
 	h := &handler{
-		s3:     s3.NewFromConfig(cfg),
-		bucket: bucket,
+		s3:                 s3.NewFromConfig(cfg),
+		bucket:             bucket,
+		originVerifySecret: os.Getenv("ORIGIN_VERIFY_SECRET"),
 	}
 
 	lambda.Start(h.handle)

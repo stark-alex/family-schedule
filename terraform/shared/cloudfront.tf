@@ -7,6 +7,11 @@ data "terraform_remote_state" "api_prod" {
   }
 }
 
+data "aws_ssm_parameter" "origin_verify_secret" {
+  name            = "/family-schedule/origin-verify-secret"
+  with_decryption = true
+}
+
 locals {
   s3_origin_id  = "s3-${var.project_name}"
   api_origin_id = "api-${var.project_name}"
@@ -14,13 +19,6 @@ locals {
     trimsuffix(trimprefix(data.terraform_remote_state.api_prod.outputs.api_function_url, "https://"), "/"),
     "placeholder.lambda-url.us-east-1.on.aws"
   )
-}
-
-resource "aws_cloudfront_origin_access_control" "api" {
-  name                              = "${var.project_name}-api"
-  origin_access_control_origin_type = "lambda"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "main" {
@@ -38,9 +36,13 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   origin {
-    domain_name              = local.api_domain
-    origin_id                = local.api_origin_id
-    origin_access_control_id = aws_cloudfront_origin_access_control.api.id
+    domain_name = local.api_domain
+    origin_id   = local.api_origin_id
+
+    custom_header {
+      name  = "x-origin-verify"
+      value = data.aws_ssm_parameter.origin_verify_secret.value
+    }
 
     custom_origin_config {
       http_port              = 80
