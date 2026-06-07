@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git workflow
+
+Never commit directly to `main`. Always create a branch and open a PR for review.
+
 ## Running the app locally
 
 Open via a local HTTP server — the HTML fetches `schedule.yaml` via `fetch()` and will fail with a `file://` URL:
