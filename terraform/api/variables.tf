@@ -3,12 +3,6 @@ variable "env_name" {
   type        = string
 }
 
-variable "authorization_type" {
-  description = "Lambda Function URL auth: AWS_IAM for prod, NONE for preview"
-  type        = string
-  default     = "AWS_IAM"
-}
-
 variable "s3_bucket" {
   description = "Name of the shared content S3 bucket"
   type        = string
@@ -19,10 +13,10 @@ variable "s3_bucket_arn" {
   type        = string
 }
 
-variable "cloudfront_distribution_arn" {
-  description = "ARN of the CloudFront distribution — empty string for preview envs"
+variable "s3_key" {
+  description = "S3 object key for the schedule file"
   type        = string
-  default     = ""
+  default     = "schedule.yaml"
 }
 
 variable "project_name" {

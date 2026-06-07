@@ -256,6 +256,7 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const YAML_URL = window.__PREVIEW_API__
   || (window.location.hostname === 'localhost' ? 'schedule.yaml' : '/api/schedule');
+const ORIGIN_HEADER = window.__PREVIEW_SECRET__ || null;
 
 // Time-of-day bands
 const BANDS = [
@@ -292,7 +293,8 @@ let currentView  = 'all';
 // ── LOAD YAML ───────────────────────────────────────────────────────────────
 async function loadYaml() {
   try {
-    const res = await fetch(YAML_URL + '?_=' + Date.now());
+    const fetchOpts = ORIGIN_HEADER ? { headers: { 'x-origin-verify': ORIGIN_HEADER } } : {};
+    const res = await fetch(YAML_URL + '?_=' + Date.now(), fetchOpts);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     scheduleData = jsyaml.load(text);

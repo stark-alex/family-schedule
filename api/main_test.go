@@ -38,9 +38,15 @@ func req(method, body string) events.LambdaFunctionURLRequest {
 	}
 }
 
+func reqWithSecret(method, body, secret string) events.LambdaFunctionURLRequest {
+	r := req(method, body)
+	r.Headers = map[string]string{"x-origin-verify": secret}
+	return r
+}
+
 func TestGetSchedule_OK(t *testing.T) {
 	yaml := "days:\n  - name: Sunday\n"
-	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test"}
+	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test", scheduleKey: "schedule.yaml"}
 
 	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
 
@@ -59,7 +65,7 @@ func TestGetSchedule_OK(t *testing.T) {
 }
 
 func TestGetSchedule_S3Error(t *testing.T) {
-	h := &handler{s3: &mockS3{getErr: errors.New("s3 unavailable")}, bucket: "test"}
+	h := &handler{s3: &mockS3{getErr: errors.New("s3 unavailable")}, bucket: "test", scheduleKey: "schedule.yaml"}
 
 	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
 
@@ -73,7 +79,7 @@ func TestGetSchedule_S3Error(t *testing.T) {
 
 func TestPutSchedule_OK(t *testing.T) {
 	yaml := "days:\n  - name: Sunday\n"
-	h := &handler{s3: &mockS3{}, bucket: "test"}
+	h := &handler{s3: &mockS3{}, bucket: "test", scheduleKey: "schedule.yaml"}
 
 	resp, err := h.handle(context.Background(), req(http.MethodPut, yaml))
 
@@ -86,7 +92,7 @@ func TestPutSchedule_OK(t *testing.T) {
 }
 
 func TestPutSchedule_InvalidYAML(t *testing.T) {
-	h := &handler{s3: &mockS3{}, bucket: "test"}
+	h := &handler{s3: &mockS3{}, bucket: "test", scheduleKey: "schedule.yaml"}
 
 	resp, err := h.handle(context.Background(), req(http.MethodPut, "days: [\nunot closed"))
 
@@ -113,7 +119,7 @@ func TestPutSchedule_S3Error(t *testing.T) {
 }
 
 func TestUnsupportedMethod(t *testing.T) {
-	h := &handler{s3: &mockS3{}, bucket: "test"}
+	h := &handler{s3: &mockS3{}, bucket: "test", scheduleKey: "schedule.yaml"}
 
 	resp, err := h.handle(context.Background(), req(http.MethodDelete, ""))
 
@@ -122,5 +128,59 @@ func TestUnsupportedMethod(t *testing.T) {
 	}
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("want 405, got %d", resp.StatusCode)
+	}
+}
+
+func TestOriginVerify_MissingHeader(t *testing.T) {
+	h := &handler{s3: &mockS3{getBody: "days:\n"}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
+
+	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.StatusCode != http.StatusForbidden {
+		t.Errorf("want 403, got %d", resp.StatusCode)
+	}
+}
+
+func TestOriginVerify_WrongHeader(t *testing.T) {
+	h := &handler{s3: &mockS3{getBody: "days:\n"}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
+
+	resp, err := h.handle(context.Background(), reqWithSecret(http.MethodGet, "", "wrong"))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.StatusCode != http.StatusForbidden {
+		t.Errorf("want 403, got %d", resp.StatusCode)
+	}
+}
+
+func TestOriginVerify_CorrectHeader(t *testing.T) {
+	yaml := "days:\n  - name: Sunday\n"
+	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
+
+	resp, err := h.handle(context.Background(), reqWithSecret(http.MethodGet, "", "s3cr3t"))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("want 200, got %d", resp.StatusCode)
+	}
+}
+
+func TestOriginVerify_DisabledWhenNoSecret(t *testing.T) {
+	yaml := "days:\n  - name: Sunday\n"
+	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test", scheduleKey: "schedule.yaml"}
+
+	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("want 200, got %d", resp.StatusCode)
 	}
 }

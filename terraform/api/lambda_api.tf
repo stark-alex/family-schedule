@@ -3,6 +3,11 @@ locals {
   function_name = var.env_name == "prod" ? "${var.project_name}-api" : "${var.project_name}-api-${var.env_name}"
 }
 
+data "aws_ssm_parameter" "origin_verify_secret" {
+  name            = "/family-schedule/origin-verify-secret"
+  with_decryption = true
+}
+
 resource "aws_iam_role" "api_lambda" {
   name = local.function_name
 
@@ -46,33 +51,20 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      S3_BUCKET = var.s3_bucket
+      S3_BUCKET            = var.s3_bucket
+      ORIGIN_VERIFY_SECRET = data.aws_ssm_parameter.origin_verify_secret.value
+      S3_KEY               = var.s3_key
     }
   }
 }
 
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = var.authorization_type
+  authorization_type = "NONE"
 
-  dynamic "cors" {
-    for_each = var.authorization_type == "NONE" ? [1] : []
-    content {
-      allow_origins = ["*"]
-      allow_methods = ["GET", "PUT"]
-      allow_headers = ["content-type"]
-    }
+  cors {
+    allow_origins = ["*"]
+    allow_methods = ["GET", "PUT"]
+    allow_headers = ["content-type", "x-origin-verify"]
   }
-}
-
-# Only grant CloudFront invoke permission for prod (AWS_IAM) deployments
-resource "aws_lambda_permission" "api_from_cloudfront" {
-  count = var.cloudfront_distribution_arn != "" ? 1 : 0
-
-  statement_id           = "AllowCloudFrontInvoke"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.api.function_name
-  principal              = "cloudfront.amazonaws.com"
-  source_arn             = var.cloudfront_distribution_arn
-  function_url_auth_type = "AWS_IAM"
 }

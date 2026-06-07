@@ -97,7 +97,26 @@ aws ssm put-parameter \
 
 ---
 
-## Step 4 — Configure Terraform variables
+## Step 4 — Create origin verify secret
+
+The API Lambda validates a secret header injected by CloudFront, preventing direct access to the Lambda URL. Generate a random secret and store it in SSM:
+
+```bash
+SECRET=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+
+aws ssm put-parameter \
+  --name "/family-schedule/origin-verify-secret" \
+  --value "$SECRET" \
+  --type SecureString \
+  --region us-east-1
+```
+
+Terraform reads this at deploy time — you never need to reference it again.
+
+---
+
+## Step 5 — Configure Terraform variables
+
 
 ```bash
 cd terraform
@@ -113,7 +132,7 @@ hosted_zone_id = "Z0ABCDEF1234567"  # from Step 1
 
 ---
 
-## Step 5 — Apply Terraform (two passes)
+## Step 6 — Apply Terraform (two passes)
 
 The ACM certificate must be created and DNS-validated before the rest of the infrastructure can reference it:
 
@@ -141,7 +160,7 @@ terraform apply
 
 ---
 
-## Step 6 — Deploy content
+## Step 7 — Deploy content
 
 ```bash
 cd ..   # back to repo root

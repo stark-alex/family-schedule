@@ -15,19 +15,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const scheduleKey = "schedule.yaml"
-
 type s3Client interface {
 	GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
 	PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 }
 
 type handler struct {
-	s3     s3Client
-	bucket string
+	s3                 s3Client
+	bucket             string
+	scheduleKey        string
+	originVerifySecret string
 }
 
 func (h *handler) handle(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
+	if h.originVerifySecret != "" && req.Headers["x-origin-verify"] != h.originVerifySecret {
+		return events.LambdaFunctionURLResponse{StatusCode: http.StatusForbidden}, nil
+	}
 	switch req.RequestContext.HTTP.Method {
 	case http.MethodGet:
 		return h.getSchedule(ctx)
@@ -41,7 +44,7 @@ func (h *handler) handle(ctx context.Context, req events.LambdaFunctionURLReques
 func (h *handler) getSchedule(ctx context.Context) (events.LambdaFunctionURLResponse, error) {
 	out, err := h.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(h.bucket),
-		Key:    aws.String(scheduleKey),
+		Key:    aws.String(h.scheduleKey),
 	})
 	if err != nil {
 		return errResponse(http.StatusInternalServerError, "failed to read schedule"), nil
@@ -61,7 +64,6 @@ func (h *handler) getSchedule(ctx context.Context) (events.LambdaFunctionURLResp
 }
 
 func (h *handler) putSchedule(ctx context.Context, body string) (events.LambdaFunctionURLResponse, error) {
-	// Validate YAML before writing
 	var parsed any
 	if err := yaml.Unmarshal([]byte(body), &parsed); err != nil {
 		return errResponse(http.StatusBadRequest, "invalid YAML: "+err.Error()), nil
@@ -69,7 +71,7 @@ func (h *handler) putSchedule(ctx context.Context, body string) (events.LambdaFu
 
 	_, err := h.s3.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(h.bucket),
-		Key:         aws.String(scheduleKey),
+		Key:         aws.String(h.scheduleKey),
 		Body:        strings.NewReader(body),
 		ContentType: aws.String("text/yaml; charset=utf-8"),
 	})
@@ -89,7 +91,10 @@ func errResponse(code int, msg string) events.LambdaFunctionURLResponse {
 }
 
 func main() {
-	bucket := os.Getenv("S3_BUCKET")
+	key := os.Getenv("S3_KEY")
+	if key == "" {
+		key = "schedule.yaml"
+	}
 
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
@@ -97,8 +102,10 @@ func main() {
 	}
 
 	h := &handler{
-		s3:     s3.NewFromConfig(cfg),
-		bucket: bucket,
+		s3:                 s3.NewFromConfig(cfg),
+		bucket:             os.Getenv("S3_BUCKET"),
+		scheduleKey:        key,
+		originVerifySecret: os.Getenv("ORIGIN_VERIFY_SECRET"),
 	}
 
 	lambda.Start(h.handle)

@@ -49,6 +49,9 @@ jobs:
           terraform init -input=false
           echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
           echo "s3_bucket_arn=$(terraform output -raw s3_bucket_arn)" >> $GITHUB_OUTPUT
+          ORIGIN_SECRET=$(aws ssm get-parameter --name /family-schedule/origin-verify-secret --with-decryption --query Parameter.Value --output text)
+          echo "::add-mask::$ORIGIN_SECRET"
+          echo "origin_secret=$ORIGIN_SECRET" >> $GITHUB_OUTPUT
 
       - name: Terraform init – api (PR state)
         working-directory: terraform/api
@@ -62,17 +65,24 @@ jobs:
         run: |
           terraform apply -auto-approve -input=false \
             -var="env_name=pr-${{ github.event.pull_request.number }}" \
-            -var="authorization_type=NONE" \
             -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
             -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
-            -var="cloudfront_distribution_arn="
+            -var="s3_key=preview/pr-${{ github.event.pull_request.number }}/schedule.yaml"
           echo "api_url=$(terraform output -raw api_function_url)" >> $GITHUB_OUTPUT
 
-      - name: Inject preview API URL into schedule.html
+      - name: Copy prod schedule to PR preview path
+        run: |
+          aws s3 cp \
+            "s3://${{ steps.shared.outputs.s3_bucket }}/schedule.yaml" \
+            "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ github.event.pull_request.number }}/schedule.yaml" \
+            --no-progress
+
+      - name: Inject preview API URL and secret into schedule.html
         run: |
           API_URL="${{ steps.tf_apply.outputs.api_url }}"
           API_URL="${API_URL%/}"
-          sed "s|window.__PREVIEW_API__|'${API_URL}'|g" \
+          sed -e "s|window.__PREVIEW_API__|'${API_URL}'|g" \
+              -e "s|window.__PREVIEW_SECRET__|'${{ steps.shared.outputs.origin_secret }}'|g" \
             schedule.html > /tmp/schedule-preview.html
 
       - name: Upload preview HTML to S3

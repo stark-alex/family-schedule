@@ -48,17 +48,16 @@ jobs:
         run: |
           terraform destroy -auto-approve -input=false \
             -var="env_name=pr-${{ github.event.pull_request.number }}" \
-            -var="authorization_type=NONE" \
             -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
             -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
-            -var="cloudfront_distribution_arn="
+            -var="s3_key=preview/pr-${{ github.event.pull_request.number }}/schedule.yaml"
 
       - name: Delete PR state from S3
         run: |
           aws s3 rm \
             "s3://${{ env.TF_STATE_BUCKET }}/family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
 
-      - name: Delete preview HTML from content bucket
+      - name: Delete preview assets from content bucket
         run: |
           aws s3 rm \
             "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ github.event.pull_request.number }}/" \
