@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "api_lambda_s3" {
 
 resource "aws_lambda_function" "api" {
   filename         = "${path.module}/../../terraform/lambda/api.zip"
-  source_code_hash = filebase64sha256("${path.module}/../../terraform/lambda/api.zip")
+  source_code_hash = fileexists("${path.module}/../../terraform/lambda/api.zip") ? filebase64sha256("${path.module}/../../terraform/lambda/api.zip") : null
   function_name    = local.function_name
   role             = aws_iam_role.api_lambda.arn
   handler          = "bootstrap"

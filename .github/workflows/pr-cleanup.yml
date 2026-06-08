@@ -3,6 +3,12 @@ name: PR Cleanup
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to clean up'
+        required: true
+        type: string
 
 permissions:
   id-token: write
@@ -37,28 +43,32 @@ jobs:
           echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
           echo "s3_bucket_arn=$(terraform output -raw s3_bucket_arn)" >> $GITHUB_OUTPUT
 
+      - name: Resolve PR number
+        id: pr
+        run: echo "number=${{ github.event.pull_request.number || inputs.pr_number }}" >> $GITHUB_OUTPUT
+
       - name: Terraform init – api (PR state)
         working-directory: terraform/api
         run: |
           terraform init -input=false \
-            -backend-config="key=family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
+            -backend-config="key=family-schedule/api-pr-${{ steps.pr.outputs.number }}.tfstate"
 
       - name: Terraform destroy – api (PR)
         working-directory: terraform/api
         run: |
           terraform destroy -auto-approve -input=false \
-            -var="env_name=pr-${{ github.event.pull_request.number }}" \
+            -var="env_name=pr-${{ steps.pr.outputs.number }}" \
             -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
             -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
-            -var="s3_key=preview/pr-${{ github.event.pull_request.number }}/schedule.yaml"
+            -var="s3_key=preview/pr-${{ steps.pr.outputs.number }}/schedule.yaml"
 
       - name: Delete PR state from S3
         run: |
           aws s3 rm \
-            "s3://${{ env.TF_STATE_BUCKET }}/family-schedule/api-pr-${{ github.event.pull_request.number }}.tfstate"
+            "s3://${{ env.TF_STATE_BUCKET }}/family-schedule/api-pr-${{ steps.pr.outputs.number }}.tfstate"
 
       - name: Delete preview assets from content bucket
         run: |
           aws s3 rm \
-            "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ github.event.pull_request.number }}/" \
+            "s3://${{ steps.shared.outputs.s3_bucket }}/preview/pr-${{ steps.pr.outputs.number }}/" \
             --recursive
