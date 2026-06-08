@@ -72,7 +72,7 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PassRole",
           "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:ListAttachedRolePolicies",
           "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
-          "iam:ListRolePolicies"
+          "iam:ListRolePolicies", "iam:ListInstanceProfilesForRole"
         ]
         Resource = "arn:aws:iam::*:role/family-schedule-api*"
       },
