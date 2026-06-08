@@ -68,3 +68,11 @@ resource "aws_lambda_function_url" "api" {
     allow_headers = ["content-type", "x-origin-verify"]
   }
 }
+
+resource "aws_lambda_permission" "api_public" {
+  statement_id           = "FunctionURLAllowPublicAccess"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.api.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
