@@ -64,7 +64,8 @@ jobs:
             -var="env_name=pr-${{ github.event.pull_request.number }}" \
             -var="s3_bucket=${{ steps.shared.outputs.s3_bucket }}" \
             -var="s3_bucket_arn=${{ steps.shared.outputs.s3_bucket_arn }}" \
-            -var="s3_key=preview/pr-${{ github.event.pull_request.number }}/schedule.yaml"
+            -var="s3_key=preview/pr-${{ github.event.pull_request.number }}/schedule.yaml" \
+            -var="cloudfront_distribution_arn=${{ steps.shared.outputs.cf_distribution_arn }}"
           echo "api_url=$(terraform output -raw api_function_url)" >> $GITHUB_OUTPUT
 
       - name: Copy prod schedule to PR preview path
