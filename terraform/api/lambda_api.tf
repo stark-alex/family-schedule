@@ -54,20 +54,11 @@ resource "aws_lambda_function" "api" {
 
 resource "aws_lambda_function_url" "api" {
   function_name      = aws_lambda_function.api.function_name
-  authorization_type = "AWS_IAM"
+  authorization_type = "NONE"
 
   cors {
     allow_origins = ["*"]
     allow_methods = ["GET", "PUT"]
     allow_headers = ["content-type"]
   }
-}
-
-resource "aws_lambda_permission" "api_from_cloudfront" {
-  statement_id           = "AllowCloudFrontInvoke"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.api.function_name
-  principal              = "cloudfront.amazonaws.com"
-  source_arn             = var.cloudfront_distribution_arn
-  function_url_auth_type = "AWS_IAM"
 }

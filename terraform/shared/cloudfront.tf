@@ -7,12 +7,6 @@ data "terraform_remote_state" "api_prod" {
   }
 }
 
-resource "aws_cloudfront_origin_access_control" "api" {
-  name                              = "${var.project_name}-api"
-  origin_access_control_origin_type = "lambda"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
 
 locals {
   s3_origin_id  = "s3-${var.project_name}"
@@ -38,9 +32,8 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   origin {
-    domain_name              = local.api_domain
-    origin_id                = local.api_origin_id
-    origin_access_control_id = aws_cloudfront_origin_access_control.api.id
+    domain_name = local.api_domain
+    origin_id   = local.api_origin_id
 
     custom_origin_config {
       http_port              = 80
