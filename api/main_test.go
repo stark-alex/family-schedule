@@ -29,19 +29,13 @@ func (m *mockS3) PutObject(_ context.Context, _ *s3.PutObjectInput, _ ...func(*s
 	return &s3.PutObjectOutput{}, m.putErr
 }
 
-func req(method, body string) events.LambdaFunctionURLRequest {
-	return events.LambdaFunctionURLRequest{
+func req(method, body string) events.APIGatewayV2HTTPRequest {
+	return events.APIGatewayV2HTTPRequest{
 		Body: body,
-		RequestContext: events.LambdaFunctionURLRequestContext{
-			HTTP: events.LambdaFunctionURLRequestContextHTTPDescription{Method: method},
+		RequestContext: events.APIGatewayV2HTTPRequestContext{
+			HTTP: events.APIGatewayV2HTTPRequestContextHTTPDescription{Method: method},
 		},
 	}
-}
-
-func reqWithSecret(method, body, secret string) events.LambdaFunctionURLRequest {
-	r := req(method, body)
-	r.Headers = map[string]string{"x-origin-verify": secret}
-	return r
 }
 
 func TestGetSchedule_OK(t *testing.T) {
@@ -128,59 +122,5 @@ func TestUnsupportedMethod(t *testing.T) {
 	}
 	if resp.StatusCode != http.StatusMethodNotAllowed {
 		t.Errorf("want 405, got %d", resp.StatusCode)
-	}
-}
-
-func TestOriginVerify_MissingHeader(t *testing.T) {
-	h := &handler{s3: &mockS3{getBody: "days:\n"}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
-
-	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if resp.StatusCode != http.StatusForbidden {
-		t.Errorf("want 403, got %d", resp.StatusCode)
-	}
-}
-
-func TestOriginVerify_WrongHeader(t *testing.T) {
-	h := &handler{s3: &mockS3{getBody: "days:\n"}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
-
-	resp, err := h.handle(context.Background(), reqWithSecret(http.MethodGet, "", "wrong"))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if resp.StatusCode != http.StatusForbidden {
-		t.Errorf("want 403, got %d", resp.StatusCode)
-	}
-}
-
-func TestOriginVerify_CorrectHeader(t *testing.T) {
-	yaml := "days:\n  - name: Sunday\n"
-	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test", scheduleKey: "schedule.yaml", originVerifySecret: "s3cr3t"}
-
-	resp, err := h.handle(context.Background(), reqWithSecret(http.MethodGet, "", "s3cr3t"))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("want 200, got %d", resp.StatusCode)
-	}
-}
-
-func TestOriginVerify_DisabledWhenNoSecret(t *testing.T) {
-	yaml := "days:\n  - name: Sunday\n"
-	h := &handler{s3: &mockS3{getBody: yaml}, bucket: "test", scheduleKey: "schedule.yaml"}
-
-	resp, err := h.handle(context.Background(), req(http.MethodGet, ""))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("want 200, got %d", resp.StatusCode)
 	}
 }

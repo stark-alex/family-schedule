@@ -58,12 +58,19 @@ resource "aws_iam_role_policy" "github_actions" {
           "lambda:CreateFunction", "lambda:UpdateFunctionCode",
           "lambda:UpdateFunctionConfiguration", "lambda:GetFunction",
           "lambda:DeleteFunction", "lambda:AddPermission", "lambda:RemovePermission",
-          "lambda:GetPolicy", "lambda:CreateFunctionUrlConfig",
-          "lambda:UpdateFunctionUrlConfig", "lambda:GetFunctionUrlConfig",
-          "lambda:DeleteFunctionUrlConfig", "lambda:ListVersionsByFunction",
+          "lambda:GetPolicy", "lambda:ListVersionsByFunction",
           "lambda:GetFunctionCodeSigningConfig"
         ]
         Resource = "arn:aws:lambda:us-east-1:*:function:family-schedule-api*"
+      },
+      {
+        Sid    = "APIGateway"
+        Effect = "Allow"
+        Action = [
+          "apigateway:GET", "apigateway:POST", "apigateway:PUT",
+          "apigateway:PATCH", "apigateway:DELETE"
+        ]
+        Resource = "arn:aws:apigateway:us-east-1::*"
       },
       {
         Sid    = "IAM"
