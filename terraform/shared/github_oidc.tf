@@ -59,7 +59,8 @@ resource "aws_iam_role_policy" "github_actions" {
           "lambda:UpdateFunctionConfiguration", "lambda:GetFunction",
           "lambda:DeleteFunction", "lambda:AddPermission", "lambda:RemovePermission",
           "lambda:GetPolicy", "lambda:ListVersionsByFunction",
-          "lambda:GetFunctionCodeSigningConfig"
+          "lambda:GetFunctionCodeSigningConfig",
+          "lambda:GetFunctionUrlConfig", "lambda:DeleteFunctionUrlConfig"
         ]
         Resource = "arn:aws:lambda:us-east-1:*:function:family-schedule-api*"
       },
