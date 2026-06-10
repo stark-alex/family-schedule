@@ -254,7 +254,9 @@
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const YAML_URL = window.__PREVIEW_API__ || 'schedule.yaml';
+const isPreview = window.location.pathname.startsWith('/preview/');
+const YAML_URL = window.__PREVIEW_API__
+  || (isPreview || window.location.hostname === 'localhost' ? 'schedule.yaml' : '/api/schedule');
 const ORIGIN_HEADER = window.__PREVIEW_SECRET__ || null;
 
 // Time-of-day bands

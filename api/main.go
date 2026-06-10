@@ -21,27 +21,23 @@ type s3Client interface {
 }
 
 type handler struct {
-	s3                 s3Client
-	bucket             string
-	scheduleKey        string
-	originVerifySecret string
+	s3          s3Client
+	bucket      string
+	scheduleKey string
 }
 
-func (h *handler) handle(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
-	if h.originVerifySecret != "" && req.Headers["x-origin-verify"] != h.originVerifySecret {
-		return events.LambdaFunctionURLResponse{StatusCode: http.StatusForbidden}, nil
-	}
+func (h *handler) handle(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	switch req.RequestContext.HTTP.Method {
 	case http.MethodGet:
 		return h.getSchedule(ctx)
 	case http.MethodPut:
 		return h.putSchedule(ctx, req.Body)
 	default:
-		return events.LambdaFunctionURLResponse{StatusCode: http.StatusMethodNotAllowed}, nil
+		return events.APIGatewayV2HTTPResponse{StatusCode: http.StatusMethodNotAllowed}, nil
 	}
 }
 
-func (h *handler) getSchedule(ctx context.Context) (events.LambdaFunctionURLResponse, error) {
+func (h *handler) getSchedule(ctx context.Context) (events.APIGatewayV2HTTPResponse, error) {
 	out, err := h.s3.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(h.bucket),
 		Key:    aws.String(h.scheduleKey),
@@ -56,14 +52,14 @@ func (h *handler) getSchedule(ctx context.Context) (events.LambdaFunctionURLResp
 		return errResponse(http.StatusInternalServerError, "failed to read schedule body"), nil
 	}
 
-	return events.LambdaFunctionURLResponse{
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
 		Headers:    map[string]string{"Content-Type": "text/yaml; charset=utf-8"},
 		Body:       string(body),
 	}, nil
 }
 
-func (h *handler) putSchedule(ctx context.Context, body string) (events.LambdaFunctionURLResponse, error) {
+func (h *handler) putSchedule(ctx context.Context, body string) (events.APIGatewayV2HTTPResponse, error) {
 	var parsed any
 	if err := yaml.Unmarshal([]byte(body), &parsed); err != nil {
 		return errResponse(http.StatusBadRequest, "invalid YAML: "+err.Error()), nil
@@ -79,11 +75,11 @@ func (h *handler) putSchedule(ctx context.Context, body string) (events.LambdaFu
 		return errResponse(http.StatusInternalServerError, "failed to save schedule"), nil
 	}
 
-	return events.LambdaFunctionURLResponse{StatusCode: http.StatusNoContent}, nil
+	return events.APIGatewayV2HTTPResponse{StatusCode: http.StatusNoContent}, nil
 }
 
-func errResponse(code int, msg string) events.LambdaFunctionURLResponse {
-	return events.LambdaFunctionURLResponse{
+func errResponse(code int, msg string) events.APIGatewayV2HTTPResponse {
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: code,
 		Headers:    map[string]string{"Content-Type": "text/plain"},
 		Body:       msg,
@@ -102,10 +98,9 @@ func main() {
 	}
 
 	h := &handler{
-		s3:                 s3.NewFromConfig(cfg),
-		bucket:             os.Getenv("S3_BUCKET"),
-		scheduleKey:        key,
-		originVerifySecret: os.Getenv("ORIGIN_VERIFY_SECRET"),
+		s3:          s3.NewFromConfig(cfg),
+		bucket:      os.Getenv("S3_BUCKET"),
+		scheduleKey: key,
 	}
 
 	lambda.Start(h.handle)
