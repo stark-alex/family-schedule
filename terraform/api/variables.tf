@@ -29,3 +29,8 @@ variable "aws_region" {
   type    = string
   default = "us-east-1"
 }
+
+variable "cloudfront_distribution_arn" {
+  description = "ARN of the CloudFront distribution allowed to invoke this Lambda via OAC"
+  type        = string
+}
